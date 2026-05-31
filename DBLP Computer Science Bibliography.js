@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2026-05-31 14:47:24"
+	"lastUpdated": "2026-05-31 23:03:00"
 }
 
 /*
@@ -40,11 +40,14 @@ function isRecordExportURL(url) {
 }
 
 function getBibTeXURL(url) {
-	let match = url.match(/^(https?:\/\/[^?#]+\/rec\/)(?:(rdf)\/)?([^?#]+?)(?:\.(xml|rdf))?(?:[?#].*)?$/i);
+	let match = url.match(/^(https?:\/\/[^?#]+\/rec\/)(?:(rdf)\/)?([^?#]+?)(?:\.(xml|rdf))?(\?[^#]*)?(?:#.*)?$/i);
 	if (!match || (!match[2] && !match[4])) {
 		return false;
 	}
-	return match[1] + match[3].replace(/\.(?:html|xml|rdf)$/i, '') + '.html?view=bibtex';
+	let params = new URLSearchParams(match[5] || '');
+	params.delete('view');
+	params.set('view', 'bibtex');
+	return match[1] + match[3].replace(/\.(?:html|xml|rdf)$/i, '') + '.html?' + params.toString();
 }
 
 function detectWeb(doc, url) {
@@ -611,6 +614,65 @@ var testCases = [
 				"tags": [],
 				"notes": [],
 				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://dblp.org/rec/reference/choice/LangX16.xml?param=2",
+		"items": [
+			{
+				"itemType": "bookSection",
+				"creators": [
+					{
+						"firstName": "Jérôme",
+						"lastName": "Lang",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Lirong",
+						"lastName": "Xia",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Felix",
+						"lastName": "Brandt",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Vincent",
+						"lastName": "Conitzer",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Ulle",
+						"lastName": "Endriss",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Jérôme",
+						"lastName": "Lang",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Ariel D.",
+						"lastName": "Procaccia",
+						"creatorType": "editor"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [],
+				"itemID": "DBLP:reference/choice/LangX16",
+				"title": "Voting in Combinatorial Domains",
+				"pages": "197–222",
+				"date": "2016",
+				"extra": "DOI: 10.1017/CBO9781107446984.010",
+				"bookTitle": "Handbook of Computational Social Choice",
+				"publisher": "Cambridge University Press",
+				"ISBN": "9781107446984",
+				"libraryCatalog": "DBLP Computer Science Bibliography"
 			}
 		]
 	}
