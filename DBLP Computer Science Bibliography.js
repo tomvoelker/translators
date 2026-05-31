@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2023-04-20 13:37:43"
+	"lastUpdated": "2026-05-31 13:37:31"
 }
 
 /*
@@ -35,8 +35,16 @@
 	***** END LICENSE BLOCK *****
 */
 
+function isXMLRecordURL(url) {
+	return /\/rec\/.*\.xml$/i.test(url);
+}
+
+function getBibTeXURL(url) {
+	return url.replace(/\.xml$/i, '.html?view=bibtex');
+}
+
 function detectWeb(doc, url) {
-	if (doc.querySelector('#bibtex-section')) {
+	if (doc.querySelector('#bibtex-section') || isXMLRecordURL(url)) {
 		if (url.includes('journals')) {
 			return "journalArticle";
 		}
@@ -144,13 +152,16 @@ function getSearchResults(doc, checkOnly) {
 	return found ? items : false;
 }
 
-function doWeb(doc, url) {
+async function doWeb(doc, url) {
 	if (detectWeb(doc, url) == "multiple") {
 		Zotero.selectItems(getSearchResults(doc, false), function (items) {
 			if (items) ZU.processDocuments(Object.keys(items), scrape);
 		});
 	}
 	else {
+		if (isXMLRecordURL(url)) {
+			doc = await requestDocument(getBibTeXURL(url));
+		}
 		scrape(doc, url);
 	}
 }
@@ -451,6 +462,112 @@ var testCases = [
 				"libraryCatalog": "DBLP Computer Science Bibliography",
 				"pages": "197–222",
 				"publisher": "Cambridge University Press",
+				"attachments": [],
+				"tags": [],
+				"notes": [],
+				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://dblp.uni-trier.de/rec/books/sp/stdesign14/AtzmuellerBHKM0SSS14.xml",
+		"detectedItemType": "book",
+		"items": [
+			{
+				"itemType": "bookSection",
+				"title": "Connect-U: A System for Enhancing Social Networking",
+				"creators": [
+					{
+						"firstName": "Martin",
+						"lastName": "Atzmueller",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Kay",
+						"lastName": "Behrenbruch",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Axel",
+						"lastName": "Hoffmann",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Mark",
+						"lastName": "Kibanov",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Bjoern Elmar",
+						"lastName": "Macek",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Christoph",
+						"lastName": "Scholz",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Hendrik",
+						"lastName": "Skistims",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Matthias",
+						"lastName": "Söllner",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Gerd",
+						"lastName": "Stumme",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Klaus",
+						"lastName": "David",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Kurt",
+						"lastName": "Geihs",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Jan Marco",
+						"lastName": "Leimeister",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Alexander",
+						"lastName": "Roßnagel",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Ludger",
+						"lastName": "Schmidt",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Gerd",
+						"lastName": "Stumme",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Arno",
+						"lastName": "Wacker",
+						"creatorType": "editor"
+					}
+				],
+				"date": "2014",
+				"bookTitle": "Socio-technical Design of Ubiquitous Computing Systems",
+				"extra": "DOI: 10.1007/978-3-319-05044-7_15",
+				"itemID": "DBLP:books/sp/stdesign14/AtzmuellerBHKM0SSS14",
+				"libraryCatalog": "DBLP Computer Science Bibliography",
+				"pages": "261–275",
+				"publisher": "Springer",
+				"shortTitle": "Connect-U",
+				"url": "https://doi.org/10.1007/978-3-319-05044-7\\_15",
 				"attachments": [],
 				"tags": [],
 				"notes": [],
