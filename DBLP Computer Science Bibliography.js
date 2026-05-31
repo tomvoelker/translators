@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2026-05-31 13:37:31"
+	"lastUpdated": "2026-05-31 14:47:24"
 }
 
 /*
@@ -35,16 +35,20 @@
 	***** END LICENSE BLOCK *****
 */
 
-function isXMLRecordURL(url) {
-	return /\/rec\/.*\.xml$/i.test(url);
+function isRecordExportURL(url) {
+	return !!getBibTeXURL(url);
 }
 
 function getBibTeXURL(url) {
-	return url.replace(/\.xml$/i, '.html?view=bibtex');
+	let match = url.match(/^(https?:\/\/[^?#]+\/rec\/)(?:(rdf)\/)?([^?#]+?)(?:\.(xml|rdf))?(?:[?#].*)?$/i);
+	if (!match || (!match[2] && !match[4])) {
+		return false;
+	}
+	return match[1] + match[3].replace(/\.(?:html|xml|rdf)$/i, '') + '.html?view=bibtex';
 }
 
 function detectWeb(doc, url) {
-	if (doc.querySelector('#bibtex-section') || isXMLRecordURL(url)) {
+	if (doc.querySelector('#bibtex-section') || isRecordExportURL(url)) {
 		if (url.includes('journals')) {
 			return "journalArticle";
 		}
@@ -159,8 +163,9 @@ async function doWeb(doc, url) {
 		});
 	}
 	else {
-		if (isXMLRecordURL(url)) {
-			doc = await requestDocument(getBibTeXURL(url));
+		let bibTeXURL = getBibTeXURL(url);
+		if (bibTeXURL) {
+			doc = await requestDocument(bibTeXURL);
 		}
 		scrape(doc, url);
 	}
@@ -462,6 +467,40 @@ var testCases = [
 				"libraryCatalog": "DBLP Computer Science Bibliography",
 				"pages": "197–222",
 				"publisher": "Cambridge University Press",
+				"attachments": [],
+				"tags": [],
+				"notes": [],
+				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://dblp.uni-trier.de/rec/conf/icassp/AlmeidaK14.rdf",
+		"detectedItemType": "conferencePaper",
+		"items": [
+			{
+				"itemType": "conferencePaper",
+				"title": "Distributed large-scale tensor decomposition",
+				"creators": [
+					{
+						"firstName": "André Lima Férrer de",
+						"lastName": "Almeida",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Alain Y.",
+						"lastName": "Kibangou",
+						"creatorType": "author"
+					}
+				],
+				"date": "2014",
+				"DOI": "10.1109/ICASSP.2014.6853551",
+				"itemID": "DBLP:conf/icassp/AlmeidaK14",
+				"libraryCatalog": "DBLP Computer Science Bibliography",
+				"pages": "26–30",
+				"proceedingsTitle": "IEEE International Conference on Acoustics, Speech and Signal Processing, ICASSP 2014, Florence, Italy, May 4-9, 2014",
+				"publisher": "IEEE",
 				"attachments": [],
 				"tags": [],
 				"notes": [],
