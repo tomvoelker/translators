@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2023-04-20 13:37:43"
+	"lastUpdated": "2026-05-31 23:03:00"
 }
 
 /*
@@ -35,8 +35,23 @@
 	***** END LICENSE BLOCK *****
 */
 
+function isRecordExportURL(url) {
+	return !!getBibTeXURL(url);
+}
+
+function getBibTeXURL(url) {
+	let match = url.match(/^(https?:\/\/[^?#]+\/rec\/)(?:(rdf)\/)?([^?#]+?)(?:\.(xml|rdf))?(\?[^#]*)?(?:#.*)?$/i);
+	if (!match || (!match[2] && !match[4])) {
+		return false;
+	}
+	let params = new URLSearchParams(match[5] || '');
+	params.delete('view');
+	params.set('view', 'bibtex');
+	return match[1] + match[3].replace(/\.(?:html|xml|rdf)$/i, '') + '.html?' + params.toString();
+}
+
 function detectWeb(doc, url) {
-	if (doc.querySelector('#bibtex-section')) {
+	if (doc.querySelector('#bibtex-section') || isRecordExportURL(url)) {
 		if (url.includes('journals')) {
 			return "journalArticle";
 		}
@@ -144,13 +159,17 @@ function getSearchResults(doc, checkOnly) {
 	return found ? items : false;
 }
 
-function doWeb(doc, url) {
+async function doWeb(doc, url) {
 	if (detectWeb(doc, url) == "multiple") {
 		Zotero.selectItems(getSearchResults(doc, false), function (items) {
 			if (items) ZU.processDocuments(Object.keys(items), scrape);
 		});
 	}
 	else {
+		let bibTeXURL = getBibTeXURL(url);
+		if (bibTeXURL) {
+			doc = await requestDocument(bibTeXURL);
+		}
 		scrape(doc, url);
 	}
 }
@@ -455,6 +474,205 @@ var testCases = [
 				"tags": [],
 				"notes": [],
 				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://dblp.uni-trier.de/rec/conf/icassp/AlmeidaK14.rdf",
+		"detectedItemType": "conferencePaper",
+		"items": [
+			{
+				"itemType": "conferencePaper",
+				"title": "Distributed large-scale tensor decomposition",
+				"creators": [
+					{
+						"firstName": "André Lima Férrer de",
+						"lastName": "Almeida",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Alain Y.",
+						"lastName": "Kibangou",
+						"creatorType": "author"
+					}
+				],
+				"date": "2014",
+				"DOI": "10.1109/ICASSP.2014.6853551",
+				"itemID": "DBLP:conf/icassp/AlmeidaK14",
+				"libraryCatalog": "DBLP Computer Science Bibliography",
+				"pages": "26–30",
+				"proceedingsTitle": "IEEE International Conference on Acoustics, Speech and Signal Processing, ICASSP 2014, Florence, Italy, May 4-9, 2014",
+				"publisher": "IEEE",
+				"attachments": [],
+				"tags": [],
+				"notes": [],
+				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://dblp.uni-trier.de/rec/books/sp/stdesign14/AtzmuellerBHKM0SSS14.xml",
+		"detectedItemType": "book",
+		"items": [
+			{
+				"itemType": "bookSection",
+				"title": "Connect-U: A System for Enhancing Social Networking",
+				"creators": [
+					{
+						"firstName": "Martin",
+						"lastName": "Atzmueller",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Kay",
+						"lastName": "Behrenbruch",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Axel",
+						"lastName": "Hoffmann",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Mark",
+						"lastName": "Kibanov",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Bjoern Elmar",
+						"lastName": "Macek",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Christoph",
+						"lastName": "Scholz",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Hendrik",
+						"lastName": "Skistims",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Matthias",
+						"lastName": "Söllner",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Gerd",
+						"lastName": "Stumme",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Klaus",
+						"lastName": "David",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Kurt",
+						"lastName": "Geihs",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Jan Marco",
+						"lastName": "Leimeister",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Alexander",
+						"lastName": "Roßnagel",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Ludger",
+						"lastName": "Schmidt",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Gerd",
+						"lastName": "Stumme",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Arno",
+						"lastName": "Wacker",
+						"creatorType": "editor"
+					}
+				],
+				"date": "2014",
+				"bookTitle": "Socio-technical Design of Ubiquitous Computing Systems",
+				"extra": "DOI: 10.1007/978-3-319-05044-7_15",
+				"itemID": "DBLP:books/sp/stdesign14/AtzmuellerBHKM0SSS14",
+				"libraryCatalog": "DBLP Computer Science Bibliography",
+				"pages": "261–275",
+				"publisher": "Springer",
+				"shortTitle": "Connect-U",
+				"url": "https://doi.org/10.1007/978-3-319-05044-7\\_15",
+				"attachments": [],
+				"tags": [],
+				"notes": [],
+				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://dblp.org/rec/reference/choice/LangX16.xml?param=2",
+		"items": [
+			{
+				"itemType": "bookSection",
+				"creators": [
+					{
+						"firstName": "Jérôme",
+						"lastName": "Lang",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Lirong",
+						"lastName": "Xia",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Felix",
+						"lastName": "Brandt",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Vincent",
+						"lastName": "Conitzer",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Ulle",
+						"lastName": "Endriss",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Jérôme",
+						"lastName": "Lang",
+						"creatorType": "editor"
+					},
+					{
+						"firstName": "Ariel D.",
+						"lastName": "Procaccia",
+						"creatorType": "editor"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [],
+				"itemID": "DBLP:reference/choice/LangX16",
+				"title": "Voting in Combinatorial Domains",
+				"pages": "197–222",
+				"date": "2016",
+				"extra": "DOI: 10.1017/CBO9781107446984.010",
+				"bookTitle": "Handbook of Computational Social Choice",
+				"publisher": "Cambridge University Press",
+				"ISBN": "9781107446984",
+				"libraryCatalog": "DBLP Computer Science Bibliography"
 			}
 		]
 	}
