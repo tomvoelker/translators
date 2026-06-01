@@ -2,14 +2,14 @@
 	"translatorID": "b97462fa-f20b-4a1e-8a73-3a434a81518b",
 	"label": "USENIX",
 	"creator": "Tim Leonhard Storm",
-	"target": "^https://www\\.usenix\\.org/conference/.*/presentation",
+	"target": "^https?://(?:www\\.)?usenix\\.org/(?:conference/.*/presentation|legacy/(?:events/[^/]+/tech/[^/]+\\.html(?:$|[?#])|publications/library/proceedings/[^/]+/(?:[^/]+/)*[^/]+\\.html(?:$|[?#])))",
 	"minVersion": "5.0",
 	"maxVersion": "",
 	"priority": 100,
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2025-07-29 16:45:18"
+	"lastUpdated": "2026-06-01 01:30:45"
 }
 
 /*
@@ -46,6 +46,107 @@ function stripAllUnescapedBraces(s) {
 	return s.replace(/\\([{}])/g, '$1');
 }
 
+function isLegacyProceedingsPage(url) {
+	return /\/legacy\/events\/[^/?#]+\/tech\/[^/?#]+\.html(?:[?#]|$)/.test(url)
+		|| /\/legacy\/publications\/library\/proceedings\/[^/?#]+\/(?:[^/?#]+\/)*[^/?#]+\.html(?:[?#]|$)/.test(url);
+}
+
+function isLegacyProceedingsURL(url) {
+	return url.includes('/legacy/events/')
+		|| url.includes('/legacy/publications/library/proceedings/');
+}
+
+function isLegacyArticlePage(doc, url) {
+	return isLegacyProceedingsPage(url)
+		&& getLegacyTitle(doc)
+		&& /\n\s*Abstract\s*(?:\n|$)/i.test(getLegacyTextAfterTitle(doc));
+}
+
+function getLegacyTitle(doc) {
+	return stripAllUnescapedBraces(ZU.trimInternal(text(doc, 'h2') || ''));
+}
+
+function getLegacyTextAfterTitle(doc) {
+	let heading = doc.querySelector('h2');
+	if (!heading) return '';
+
+	let parentText = heading.parentElement.innerText || heading.parentElement.textContent;
+	let title = heading.innerText || heading.textContent;
+	let start = parentText.indexOf(title);
+	if (start == -1) return '';
+
+	return parentText.slice(start + title.length);
+}
+
+function getLegacyAuthorBlock(doc) {
+	return getLegacyTextAfterTitle(doc).split(/\n\s*Abstract\b/i)[0].trim();
+}
+
+function lineIsAffiliation(line) {
+	if (/^(?:the\s+)?(?:university|hewlett-packard|computer laboratory|laborator|department|school|college|institute|research)\b/i.test(line)) {
+		return true;
+	}
+	return /\b(?:university|laborator(?:y|ies)|institute|college|school|department|research)\b/i.test(line)
+		&& !/\band\b/i.test(line)
+		&& !line.includes(',');
+}
+
+function cleanLegacyAuthorLine(line) {
+	return line.replace(/,\s*[^,]*(?:University|Computer Laboratory|Hewlett-Packard|Laborator(?:y|ies)|Institute|College|School|Department|Research)\b.*$/, '');
+}
+
+function addLegacyAuthors(item, doc) {
+	let authorLines = getLegacyAuthorBlock(doc)
+		.split(/\n+/)
+		.map(line => ZU.trimInternal(line))
+		.filter(line => line && !lineIsAffiliation(line))
+		.map(cleanLegacyAuthorLine)
+		.filter(Boolean);
+
+	let authors = authorLines.join(', ')
+		.replace(/(?:,)?\s+\band\b\s+/g, ', ')
+		.split(/\s*,\s*/)
+		.filter(Boolean);
+
+	for (let author of authors) {
+		item.creators.push(ZU.cleanAuthor(author, 'author'));
+	}
+}
+
+function scrapeLegacyProceedings(doc, url) {
+	let item = new Zotero.Item('conferencePaper');
+	item.title = getLegacyTitle(doc);
+	item.url = url;
+	item.libraryCatalog = 'USENIX';
+	item.conferenceName = (doc.title || '').replace(/\s+[–-]\s+Abstract$/, '');
+
+	let year = item.conferenceName.match(/\b(19|20)\d{2}\b/);
+	if (year) {
+		item.date = year[0];
+	}
+
+	for (let paragraph of doc.querySelectorAll('p')) {
+		let pages = paragraph.textContent.match(/\bPp\.\s*([\d–-]+)/);
+		if (pages) {
+			item.pages = pages[1];
+			break;
+		}
+	}
+
+	addLegacyAuthors(item, doc);
+
+	let pdfLink = doc.querySelector('a[href$=".pdf"]');
+	if (pdfLink) {
+		item.attachments.push({
+			title: 'Full Text PDF',
+			url: pdfLink.href,
+			mimeType: 'application/pdf'
+		});
+	}
+
+	item.complete();
+}
+
 
 async function scrape(doc) {
 	let translator = Zotero.loadTranslator('web');
@@ -63,10 +164,20 @@ function detectWeb(doc, url) {
 	if (url.includes('/presentation/')) {
 		return 'conferencePaper';
 	}
+	if (isLegacyArticlePage(doc, url)) {
+		return 'conferencePaper';
+	}
 	return false;
 }
 
 async function doWeb(doc, url) {
+	if (isLegacyArticlePage(doc, url)) {
+		scrapeLegacyProceedings(doc, url);
+		return;
+	}
+	if (isLegacyProceedingsURL(url)) {
+		return;
+	}
 	await scrape(await requestDocument(url));
 }
 
@@ -144,6 +255,135 @@ var testCases = [
 				"tags": [],
 				"notes": [],
 				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/wilkes.html",
+		"items": [
+			{
+				"itemType": "conferencePaper",
+				"creators": [
+					{
+						"firstName": "Stefan",
+						"lastName": "Savage",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "John",
+						"lastName": "Wilkes",
+						"creatorType": "author"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [
+					{
+						"title": "Full Text PDF",
+						"mimeType": "application/pdf"
+					}
+				],
+				"title": "AFRAID - A Frequently Redundant Array of Independent Disks",
+				"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/wilkes.html",
+				"libraryCatalog": "USENIX",
+				"conferenceName": "USENIX 1996 ANNUAL TECHNICAL CONFERENCE",
+				"date": "1996"
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/events/usenix07/tech/kotla.html",
+		"items": [
+			{
+				"itemType": "conferencePaper",
+				"creators": [
+					{
+						"firstName": "Ramakrishna",
+						"lastName": "Kotla",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Lorenzo",
+						"lastName": "Alvisi",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Mike",
+						"lastName": "Dahlin",
+						"creatorType": "author"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [
+					{
+						"title": "Full Text PDF",
+						"mimeType": "application/pdf"
+					}
+				],
+				"title": "SafeStore: A Durable and Practical Storage System",
+				"url": "https://www.usenix.org/legacy/events/usenix07/tech/kotla.html",
+				"libraryCatalog": "USENIX",
+				"conferenceName": "2007 USENIX Annual Technical Conference (USENIX '07)",
+				"date": "2007",
+				"pages": "129–142",
+				"shortTitle": "SafeStore"
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/",
+		"detectedItemType": false,
+		"items": []
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/program.html",
+		"detectedItemType": false,
+		"items": []
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/nsdi05/tech/shieh.html",
+		"items": [
+			{
+				"itemType": "conferencePaper",
+				"creators": [
+					{
+						"firstName": "Alan",
+						"lastName": "Shieh",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Andrew C.",
+						"lastName": "Myers",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Emin Gün",
+						"lastName": "Sirer",
+						"creatorType": "author"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [
+					{
+						"title": "Full Text PDF",
+						"mimeType": "application/pdf"
+					}
+				],
+				"title": "Trickles: A Stateless Network Stack for Improved Scalability, Resilience, and Flexibility",
+				"url": "https://www.usenix.org/legacy/publications/library/proceedings/nsdi05/tech/shieh.html",
+				"libraryCatalog": "USENIX",
+				"conferenceName": "NSDI '05 Abstract",
+				"shortTitle": "Trickles"
 			}
 		]
 	}
