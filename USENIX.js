@@ -2,14 +2,14 @@
 	"translatorID": "b97462fa-f20b-4a1e-8a73-3a434a81518b",
 	"label": "USENIX",
 	"creator": "Tim Leonhard Storm",
-	"target": "^https?://(?:www\\.)?usenix\\.org/(?:conference/.*/presentation|legacy/(?:events|publications/library/proceedings)/)",
+	"target": "^https?://(?:www\\.)?usenix\\.org/(?:conference/.*/presentation|legacy/(?:events/[^/]+/tech/[^/]+\\.html(?:$|[?#])|publications/library/proceedings/[^/]+/[^/]+\\.html(?:$|[?#])))",
 	"minVersion": "5.0",
 	"maxVersion": "",
 	"priority": 100,
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2026-06-01 00:07:09"
+	"lastUpdated": "2026-06-01 01:10:52"
 }
 
 /*
@@ -47,6 +47,11 @@ function stripAllUnescapedBraces(s) {
 }
 
 function isLegacyProceedingsPage(url) {
+	return /\/legacy\/events\/[^/?#]+\/tech\/[^/?#]+\.html(?:[?#]|$)/.test(url)
+		|| /\/legacy\/publications\/library\/proceedings\/[^/?#]+\/[^/?#]+\.html(?:[?#]|$)/.test(url);
+}
+
+function isLegacyProceedingsURL(url) {
 	return url.includes('/legacy/events/')
 		|| url.includes('/legacy/publications/library/proceedings/');
 }
@@ -159,6 +164,9 @@ function detectWeb(doc, url) {
 async function doWeb(doc, url) {
 	if (isLegacyProceedingsPage(url)) {
 		scrapeLegacyProceedings(doc, url);
+		return;
+	}
+	if (isLegacyProceedingsURL(url)) {
 		return;
 	}
 	await scrape(await requestDocument(url));
@@ -317,6 +325,12 @@ var testCases = [
 				"shortTitle": "SafeStore"
 			}
 		]
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/",
+		"detectedItemType": false,
+		"items": []
 	}
 ]
 /** END TEST CASES **/
