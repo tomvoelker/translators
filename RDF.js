@@ -12,7 +12,7 @@
 	},
 	"inRepository": true,
 	"translatorType": 1,
-	"lastUpdated": "2026-03-06 21:44:09"
+	"lastUpdated": "2026-06-01 10:33:41"
 }
 
 /*
@@ -1195,6 +1195,17 @@ function importItem(newItem, node) {
 	newItem.ISBN = getFirstResults(node, [n.eprints + "isbn"], true) || newItem.ISBN;
 	// DOI from nonstandard DC, PRISM, or BIBO
 	newItem.DOI = getFirstResults(node, [n.dc + "identifier.DOI", n.prism2_0 + "doi", n.prism2_1 + "doi", n.bibo + "doi"], true) || newItem.DOI;
+	if (!newItem.DOI) {
+		for (let property of [n.eprints + "id_number", n.eprints + "official_url"]) {
+			let identifier = getFirstResults(node, [property], true);
+			if (!identifier) continue;
+			let doi = ZU.cleanDOI(identifier);
+			if (doi) {
+				newItem.DOI = doi;
+				break;
+			}
+		}
+	}
 
 	if (!newItem.url) {
 		var url = getFirstResults(node, [n.eprints + "official_url",
@@ -1771,6 +1782,24 @@ var testCases = [
 				"creators": [],
 				"itemID": "#test-report",
 				"reportNumber": "NLR-TP-96-464",
+				"attachments": [],
+				"tags": [],
+				"notes": [],
+				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "import",
+		"input": "<rdf:RDF\n xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n xmlns:eprints=\"http://purl.org/eprint/terms/\">\n    <rdf:Description rdf:about=\"https://eprints.example/id/eprint/442\">\n        <eprints:type>article</eprints:type>\n        <eprints:title>A system for learning statistical motion patterns</eprints:title>\n        <eprints:id_number>10.1109/TPAMI.2006.176</eprints:id_number>\n        <eprints:official_url>http://dx.doi.org/10.1109/TPAMI.2006.176</eprints:official_url>\n    </rdf:Description>\n</rdf:RDF>\n",
+		"items": [
+			{
+				"itemType": "journalArticle",
+				"title": "A system for learning statistical motion patterns",
+				"creators": [],
+				"DOI": "10.1109/TPAMI.2006.176",
+				"itemID": "https://eprints.example/id/eprint/442",
+				"url": "http://dx.doi.org/10.1109/TPAMI.2006.176",
 				"attachments": [],
 				"tags": [],
 				"notes": [],
