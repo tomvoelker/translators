@@ -2,14 +2,14 @@
 	"translatorID": "b97462fa-f20b-4a1e-8a73-3a434a81518b",
 	"label": "USENIX",
 	"creator": "Tim Leonhard Storm",
-	"target": "^https?://(?:www\\.)?usenix\\.org/(?:conference/.*/presentation|legacy/(?:events/[^/]+/tech/[^/]+\\.html(?:$|[?#])|publications/library/proceedings/[^/]+/[^/]+\\.html(?:$|[?#])))",
+	"target": "^https?://(?:www\\.)?usenix\\.org/(?:conference/.*/presentation|legacy/(?:events/[^/]+/tech/[^/]+\\.html(?:$|[?#])|publications/library/proceedings/[^/]+/(?:[^/]+/)*[^/]+\\.html(?:$|[?#])))",
 	"minVersion": "5.0",
 	"maxVersion": "",
 	"priority": 100,
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2026-06-01 01:10:52"
+	"lastUpdated": "2026-06-01 01:20:58"
 }
 
 /*
@@ -48,7 +48,7 @@ function stripAllUnescapedBraces(s) {
 
 function isLegacyProceedingsPage(url) {
 	return /\/legacy\/events\/[^/?#]+\/tech\/[^/?#]+\.html(?:[?#]|$)/.test(url)
-		|| /\/legacy\/publications\/library\/proceedings\/[^/?#]+\/[^/?#]+\.html(?:[?#]|$)/.test(url);
+		|| /\/legacy\/publications\/library\/proceedings\/[^/?#]+\/(?:[^/?#]+\/)*[^/?#]+\.html(?:[?#]|$)/.test(url);
 }
 
 function isLegacyProceedingsURL(url) {
@@ -57,7 +57,7 @@ function isLegacyProceedingsURL(url) {
 }
 
 function getLegacyTitle(doc) {
-	return stripAllUnescapedBraces(text(doc, 'h2') || '');
+	return stripAllUnescapedBraces(ZU.trimInternal(text(doc, 'h2') || ''));
 }
 
 function getLegacyAuthorBlock(doc) {
@@ -331,6 +331,46 @@ var testCases = [
 		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/",
 		"detectedItemType": false,
 		"items": []
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/nsdi05/tech/shieh.html",
+		"items": [
+			{
+				"itemType": "conferencePaper",
+				"creators": [
+					{
+						"firstName": "Alan",
+						"lastName": "Shieh",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Andrew C.",
+						"lastName": "Myers",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Emin Gün",
+						"lastName": "Sirer",
+						"creatorType": "author"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [
+					{
+						"title": "Full Text PDF",
+						"mimeType": "application/pdf"
+					}
+				],
+				"title": "Trickles: A Stateless Network Stack for Improved Scalability, Resilience, and Flexibility",
+				"url": "https://www.usenix.org/legacy/publications/library/proceedings/nsdi05/tech/shieh.html",
+				"libraryCatalog": "USENIX",
+				"conferenceName": "NSDI '05 Abstract",
+				"shortTitle": "Trickles"
+			}
+		]
 	}
 ]
 /** END TEST CASES **/
