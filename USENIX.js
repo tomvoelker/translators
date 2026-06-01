@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2026-06-01 01:20:58"
+	"lastUpdated": "2026-06-01 01:30:45"
 }
 
 /*
@@ -56,11 +56,17 @@ function isLegacyProceedingsURL(url) {
 		|| url.includes('/legacy/publications/library/proceedings/');
 }
 
+function isLegacyArticlePage(doc, url) {
+	return isLegacyProceedingsPage(url)
+		&& getLegacyTitle(doc)
+		&& /\n\s*Abstract\s*(?:\n|$)/i.test(getLegacyTextAfterTitle(doc));
+}
+
 function getLegacyTitle(doc) {
 	return stripAllUnescapedBraces(ZU.trimInternal(text(doc, 'h2') || ''));
 }
 
-function getLegacyAuthorBlock(doc) {
+function getLegacyTextAfterTitle(doc) {
 	let heading = doc.querySelector('h2');
 	if (!heading) return '';
 
@@ -69,8 +75,11 @@ function getLegacyAuthorBlock(doc) {
 	let start = parentText.indexOf(title);
 	if (start == -1) return '';
 
-	let textAfterTitle = parentText.slice(start + title.length);
-	return textAfterTitle.split(/\n\s*Abstract\b/i)[0].trim();
+	return parentText.slice(start + title.length);
+}
+
+function getLegacyAuthorBlock(doc) {
+	return getLegacyTextAfterTitle(doc).split(/\n\s*Abstract\b/i)[0].trim();
 }
 
 function lineIsAffiliation(line) {
@@ -155,14 +164,14 @@ function detectWeb(doc, url) {
 	if (url.includes('/presentation/')) {
 		return 'conferencePaper';
 	}
-	if (isLegacyProceedingsPage(url) && getLegacyTitle(doc)) {
+	if (isLegacyArticlePage(doc, url)) {
 		return 'conferencePaper';
 	}
 	return false;
 }
 
 async function doWeb(doc, url) {
-	if (isLegacyProceedingsPage(url)) {
+	if (isLegacyArticlePage(doc, url)) {
 		scrapeLegacyProceedings(doc, url);
 		return;
 	}
@@ -329,6 +338,12 @@ var testCases = [
 	{
 		"type": "web",
 		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/",
+		"detectedItemType": false,
+		"items": []
+	},
+	{
+		"type": "web",
+		"url": "https://www.usenix.org/legacy/publications/library/proceedings/sd96/program.html",
 		"detectedItemType": false,
 		"items": []
 	},
