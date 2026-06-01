@@ -9,7 +9,7 @@
 	"inRepository": true,
 	"translatorType": 4,
 	"browserSupport": "gcsibv",
-	"lastUpdated": "2026-04-27 15:11:51"
+	"lastUpdated": "2026-06-01 09:20:45"
 }
 
 /*
@@ -401,6 +401,15 @@ function importRDF(doc) {
 function addHighwireMetadata(doc, newItem, hwType) {
 	// HighWire metadata
 	processFields(doc, newItem, HIGHWIRE_MAPPINGS);
+	if (!newItem.DOI) {
+		for (let identifier of getContent(doc, 'dc.identifier')) {
+			let doi = ZU.cleanDOI(identifier.textContent);
+			if (doi) {
+				newItem.DOI = doi;
+				break;
+			}
+		}
+	}
 	var authorNodes = getContent(doc, 'citation_author');
 	if (authorNodes.length == 0) {
 		authorNodes = getContent(doc, 'citation_authors');
@@ -2005,6 +2014,84 @@ var testCases = [
 				"tags": [],
 				"notes": [],
 				"seeAlso": []
+			}
+		]
+	},
+	{
+		"type": "web",
+		"url": "https://www.mendeley.com/catalogue/a52fb4a0-383a-383a-bc6e-2cc7eca12cf4/",
+		"items": [
+			{
+				"itemType": "journalArticle",
+				"creators": [
+					{
+						"firstName": "Joseph W.",
+						"lastName": "Richards",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Dan L.",
+						"lastName": "Starr",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Henrik",
+						"lastName": "Brink",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Adam A.",
+						"lastName": "Miller",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Joshua S.",
+						"lastName": "Bloom",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "Nathaniel R.",
+						"lastName": "Butler",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "J. Berian",
+						"lastName": "James",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "James P.",
+						"lastName": "Long",
+						"creatorType": "author"
+					},
+					{
+						"firstName": "John",
+						"lastName": "Rice",
+						"creatorType": "author"
+					}
+				],
+				"notes": [],
+				"tags": [],
+				"seeAlso": [],
+				"attachments": [
+					{
+						"title": "Snapshot",
+						"mimeType": "text/html"
+					}
+				],
+				"title": "Active learning to overcome sample selection bias: Application to photometric variable star classification",
+				"publicationTitle": "Astrophysical Journal",
+				"volume": "744",
+				"issue": "2",
+				"pages": "undefined-undefined",
+				"date": "2012",
+				"ISSN": "15384357",
+				"url": "https://www.mendeley.com/catalogue/a52fb4a0-383a-383a-bc6e-2cc7eca12cf4/",
+				"abstractNote": "(2012) Richards et al. Astrophysical Journal. Despite the great promise of machine-learning algorithms to classify and predict astrophysical parameters for the vast numbers of astrophysical sources...",
+				"DOI": "10.1088/0004-637X/744/2/192",
+				"language": "en-GB",
+				"libraryCatalog": "www.mendeley.com",
+				"shortTitle": "Active learning to overcome sample selection bias"
 			}
 		]
 	}
